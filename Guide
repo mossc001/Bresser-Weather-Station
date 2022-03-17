@@ -1,0 +1,282 @@
+#This file documents the process for creating the Bresser Weather Station intercept on a UNIX system
+
+-- Pi-Hole --
+add these domains to your DNS pointing at the IP of server hosting xampp
+rtupdate.wunderground.com
+weatherstation.wunderground.com
+
+
+-- Proxmox --
+Download the CT Template of "ubuntu-20.04-standard_20.04-1_amd64.tar.gz".
+Spin up a CT using the template - XAMPP needs hardly any resources, mine idles at 0.5%, with 120Mb RAM usage.
+
+
+-- Console of Created CT --
+Run:
+$ apt update && upgrade" once successfully installed.
+
+Download XAMPP for Linux 8.0.7 / PHP 8.0.7 using (Note PHP 7.4 is a minimum for PHP-MQTT and Composer):
+$ wget https://www.apachefriends.org/xampp-files/8.0.7/xampp-linux-x64-8.0.7-0-installer.run
+$ chmod a+x xampp-linux-x64-8.0.7-0-installer.run
+$ sudo ./xampp-linux-x64-8.0.7-0-installer.run
+Follow the prompts and install XAMPP, it takes a while and sometimes it looks like the progress bar as stopped, it hasn't. Leave it!
+
+It's best to create an FTP user for XAMPP before we break it:
+$ adduser **username**
+# Follow prompts to create a password etc...
+$ groupadd ftp
+$ usermod -a -G ftp **username**
+$ cd /opt/lampp chown root.ftp htdocs chmod 755 htdocs
+You can check your connection using the username created, note that it uses Port 22 (SFTP), not Port 21!
+
+At this point, I took a snapshot of the CT in Proxmox, just so I had a clean XAMPP install.
+
+
+We need to install Composer but some additional packages are required.
+Still in Console...
+$ sudo apt update
+$ sudo apt install php-cli unzip
+$ sudo apt curl
+$ cd ~
+$ curl -sS https://getcomposer.org/installer -o composer-setup.php
+$ HASH=`curl -sS https://composer.github.io/installer.sig`
+$ php -r "if (hash_file('SHA384', 'composer-setup.php') === '$HASH') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+
+You should see "Installer verified". Now install and move composer to a global location "/usr/local/bin":
+$ sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+
+When successfully installed, you should see the following:
+All settings correct for using Composer
+Downloading...
+
+Composer (version 1.10.5) successfully installed to: /usr/local/bin/composer
+Use it: php /usr/local/bin/composer
+
+We now need to create the folder for the Weather Station redirect and for the installation of PHP-MQTT:
+$ cd
+$ cd /opt/lampp/htdocs
+$ mkdir weatherstation
+$ cd weatherstation
+
+** It's important you stay in the "weatherstation" folder! **
+
+$ composer require php-mqtt/client
+
+You should get a success message or similar once installed. You should see the folder "vendor" within "Weatherstation".
+
+Next create a PHP file called "updateweatherstation.php" and put the below contents within it remebering to update it with your MQTT server details!
+
+--------------------------------------------
+<?php
+
+require_once '/opt/lampp/htdocs/weatherstation/vendor/autoload.php';
+
+use PhpMqtt\Client\Exceptions\ConnectingToBrokerFailedException;
+use PhpMqtt\Client\Exceptions\DataTransferException;
+use PhpMqtt\Client\Exceptions\UnexpectedAcknowledgementException;
+use PhpMqtt\Client\MqttClient;
+
+$server = "192.168.1.205";
+$port = 1883;
+$client_id = "weather-data-publisher";
+$mqttRoot = "pws/sensors/";
+
+
+// This is for WOW Met Office Only
+$siteid = "SITE ID HERE";
+$authenticationpin = "AUTHENTICATION PIN HERE";
+
+$winddir = $_GET["winddir"];
+$wspeed = $_GET["windspeedmph"];
+$wgust = $_GET["windgustmph"];
+$hum = $_GET["humidity"];
+$dew = $_GET["dewptf"];
+$temp = $_GET["tempf"];
+$rainhour = $_GET["rainin"];
+$rainday = $_GET["dailyrainin"];
+$baro = $_GET["baromin"];
+
+
+// OVERLY VERBOSE HELPER STUFF
+function RoundIt($ee){
+  return round($ee, 2);
+}
+function toKM( $a) {
+  return  RoundIt( floatval($a)*1.60934);
+}
+function toC( $a) {
+  return RoundIt(  (floatval($a)-32) * (5/9) );
+}
+function toMM( $a) {
+    return RoundIt( floatval($a)*25.4);
+}
+  
+function toHPA( $a) {
+  return RoundIt((floatval($a)*33.8639));
+}
+// FOUND THIS ON THE NET IN SOME PASTEBIN
+function wind_cardinal( $degree ) { 
+  switch( $degree ) {
+      case ( $degree >= 348.75 && $degree <= 360 ):
+          $cardinal = "N";
+      break;
+      case ( $degree >= 0 && $degree <= 11.249 ):
+          $cardinal = "N";
+      break;
+      case ( $degree >= 11.25 && $degree <= 33.749 ):
+          $cardinal = "NNE";
+      break;
+      case ( $degree >= 33.75 && $degree <= 56.249 ):
+          $cardinal = "NE";
+      break;
+      case ( $degree >= 56.25 && $degree <= 78.749 ):
+          $cardinal = "ENE";
+      break;
+      case ( $degree >= 78.75 && $degree <= 101.249 ):
+          $cardinal = "E";
+      break;
+      case ( $degree >= 101.25 && $degree <= 123.749 ):
+          $cardinal = "ESE";
+      break;
+      case ( $degree >= 123.75 && $degree <= 146.249 ):
+          $cardinal = "SE";
+      break;
+      case ( $degree >= 146.25 && $degree <= 168.749 ):
+          $cardinal = "SSE";
+      break;
+      case ( $degree >= 168.75 && $degree <= 191.249 ):
+          $cardinal = "S";
+      break;
+      case ( $degree >= 191.25 && $degree <= 213.749 ):
+          $cardinal = "SSW";
+      break;
+      case ( $degree >= 213.75 && $degree <= 236.249 ):
+          $cardinal = "SW";
+      break;
+      case ( $degree >= 236.25 && $degree <= 258.749 ):
+          $cardinal = "WSW";
+      break;
+      case ( $degree >= 258.75 && $degree <= 281.249 ):
+          $cardinal = "W";
+      break;
+      case ( $degree >= 281.25 && $degree <= 303.749 ):
+          $cardinal = "WNW";
+      break;
+      case ( $degree >= 303.75 && $degree <= 326.249 ):
+          $cardinal = "NW";
+      break;
+      case ( $degree >= 326.25 && $degree <= 348.749 ):
+          $cardinal = "NNW";
+      break;
+      default:
+          $cardinal = null;
+  }
+ return $cardinal;
+}
+
+// SHUFF IT TO MQTT
+$mqtt = new MqttClient($server, $port, $client_id);
+$mqtt->connect();
+
+$mqtt->publish($mqttRoot .'baromin', toHPA($_GET["baromin"]), 0);
+$mqtt->publish($mqttRoot .'temp', toC($_GET["tempf"]), 0);
+$mqtt->publish($mqttRoot .'dewpt', toC($_GET["dewptf"]), 0);
+$mqtt->publish($mqttRoot .'humidity', $_GET["humidity"], 0);
+$mqtt->publish($mqttRoot .'windspeedkph', toKM($_GET["windspeedmph"]), 0);
+$mqtt->publish($mqttRoot .'windgustkph', toKM($_GET["windgustmph"]), 0);
+// $mqtt->publish($mqttRoot .'winddir',wind_cardinal( $_GET["winddir"]), 0);
+$mqtt->publish($mqttRoot .'rainmm', toMM($_GET["rainin"]), 0);
+$mqtt->publish($mqttRoot .'dailyrainmm', toMM($_GET["dailyrainin"]), 0);
+$mqtt->publish($mqttRoot .'indoortemp', toC($_GET["indoortempf"]), 0);
+$mqtt->publish($mqttRoot .'indoorhumidity', $_GET["indoorhumidity"], 0);
+
+$mqtt->publish($mqttRoot .'winddirection', $_GET["winddir"], 0);
+
+$mqtt->disconnect();
+
+// POST TO WU
+$xml = file_get_contents("http://169.63.130.180/weatherstation/updateweatherstation.php?".$_SERVER['QUERY_STRING']);
+
+
+// POST TO WOW MET OFFICE
+$xml = file_get_contents("http://wow.metoffice.gov.uk/automaticreading?siteid={$siteid}&siteAuthenticationKey={$authenticationpin}&dateutc=now&winddir={$winddir}&windspeedmph={$wspeed}&windgustmph={$wgust}&humidity={$hum}&dewptf={$dew}&tempf={$temp}&rainin={$rainhour}&dailyrainin={$rainday}&baromin={$baro}&softwaretype=WOW+PHP+v1");
+
+?>
+success
+--------------------------------------------
+
+Now upload this file via FTP to '/opt/lampp/htdocs/weatherstation'.
+
+Your weather station should now push data to your XAMPP Web Server and also repubish the data to WU and WOW.
+
+NOTE: You need to create a service for autorunning XAMPP on startup; https://www.computernetworkingnotes.com/linux-tutorials/auto-start-xampp-at-startup-in-ubuntu-linux.html
+
+
+
+In Home Assistant, add these sensors to your config.yaml:
+
+  - platform: mqtt
+    name: "PWS Barometer"
+    state_topic: "pws/sensors/baromin"
+    unit_of_measurement: 'HPa'
+    icon: mdi:gauge
+
+  - platform: mqtt
+    name: "PWS Outside Temperature"
+    state_topic: "pws/sensors/temp"
+    unit_of_measurement: '°C'
+    icon: mdi:thermometer-lines
+
+  - platform: mqtt
+    name: "PWS Dew Point"
+    state_topic: "pws/sensors/dewpt"
+    unit_of_measurement: '°C'
+    icon: mdi:thermometer-lines
+
+  - platform: mqtt
+    name: "PWS Outside Humidity"
+    state_topic: "pws/sensors/humidity"
+    unit_of_measurement: '%'
+    icon: mdi:water-percent
+
+  - platform: mqtt
+    name: "PWS Wind speed"
+    state_topic: "pws/sensors/windspeedkph"
+    unit_of_measurement: 'KMh'
+    icon: mdi:weather-windy
+
+  - platform: mqtt
+    name: "PWS Wind Gust speed"
+    state_topic: "pws/sensors/windgustkph"
+    unit_of_measurement: 'KMh'
+    icon: mdi:weather-windy
+
+  - platform: mqtt
+    name: "PWS Wind direction"
+    state_topic: "pws/sensors/winddir"
+    unit_of_measurement: ''
+    icon: mdi:compass
+
+  - platform: mqtt
+    name: "PWS Rain"
+    state_topic: "pws/sensors/rainmm"
+    unit_of_measurement: 'mm'
+    icon: mdi:ruler
+
+  - platform: mqtt
+    name: "PWS Daily Rain"
+    state_topic: "pws/sensors/dailyrainmm"
+    unit_of_measurement: 'mm'
+    icon: mdi:ruler
+
+  - platform: mqtt
+    name: "PWS Indoor Temperature"
+    state_topic: "pws/sensors/indoortemp"
+    unit_of_measurement: '°C'
+    icon: mdi:thermometer-lines
+
+  - platform: mqtt
+    name: "PWS Indoor Humidity"
+    state_topic: "pws/sensors/indoorhumidity"
+    unit_of_measurement: '%'
+    icon: mdi:water-percent
