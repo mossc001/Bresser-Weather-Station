@@ -1,4 +1,4 @@
-# Bresser-Weather-Station
+# Bresser Weather Station
 Intercepting Bresser Weather Station Data
 
 This is a guide on how to intercept the weather data produced from the Bresser 5-in-1 WiFi weather station. This uses a combination of a DNS intercept and webserver to replicate what is expected by the remote webserver to which the data would normally go.
