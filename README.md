@@ -7,7 +7,7 @@ Operating System: Proxmox VE 6.4.x
 
 Container (LXC) Host Operating System: Ubuntu 20.04 Standard
 
-https://tailscale.com
+https://www.bresseruk.com/Weatherstations/Weather-Center/BRESSER-WIFI-color-weather-center-with-5in1-profi-sensor.html
 
 # Network
 
