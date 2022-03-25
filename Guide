@@ -1,10 +1,11 @@
 #This file documents the process for creating the Bresser Weather Station intercept on a UNIX system
 
 -- Pi-Hole --
-add these domains to your DNS pointing at the IP of server hosting xampp
+add these domains to your Local DNS (Local DNS > DNS Records) pointing at the IP of server hosting XAMPP:
 rtupdate.wunderground.com
 weatherstation.wunderground.com
 
+Example: Domain: rtupdate.wunderground.com IP: 192.168.1.29	
 
 -- Proxmox --
 Download the CT Template of "ubuntu-20.04-standard_20.04-1_amd64.tar.gz".
