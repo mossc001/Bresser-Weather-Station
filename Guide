@@ -13,8 +13,8 @@ Spin up a CT using the template - XAMPP needs hardly any resources, mine idles a
 
 
 -- Console of Created CT --
-Run:
-$ apt update && upgrade" once successfully installed.
+Run once successfully installed:
+$ apt update && upgrade
 
 Download XAMPP for Linux 8.0.7 / PHP 8.0.7 using (Note PHP 7.4 is a minimum for PHP-MQTT and Composer):
 $ wget https://www.apachefriends.org/xampp-files/8.0.7/xampp-linux-x64-8.0.7-0-installer.run
@@ -82,7 +82,6 @@ $port = 1883;
 $client_id = "weather-data-publisher";
 $mqttRoot = "pws/sensors/";
 
-
 // This is for WOW Met Office Only
 $siteid = "SITE ID HERE";
 $authenticationpin = "AUTHENTICATION PIN HERE";
@@ -97,8 +96,6 @@ $rainhour = $_GET["rainin"];
 $rainday = $_GET["dailyrainin"];
 $baro = $_GET["baromin"];
 
-
-// OVERLY VERBOSE HELPER STUFF
 function RoundIt($ee){
   return round($ee, 2);
 }
@@ -115,7 +112,7 @@ function toMM( $a) {
 function toHPA( $a) {
   return RoundIt((floatval($a)*33.8639));
 }
-// FOUND THIS ON THE NET IN SOME PASTEBIN
+
 function wind_cardinal( $degree ) { 
   switch( $degree ) {
       case ( $degree >= 348.75 && $degree <= 360 ):
@@ -175,7 +172,7 @@ function wind_cardinal( $degree ) {
  return $cardinal;
 }
 
-// SHUFF IT TO MQTT
+// Send it to MQTT
 $mqtt = new MqttClient($server, $port, $client_id);
 $mqtt->connect();
 
