@@ -193,7 +193,7 @@ $mqtt->publish($mqttRoot .'winddirection', $_GET["winddir"], 0);
 $mqtt->disconnect();
 
 // POST TO WU
-$xml = file_get_contents("http://169.63.130.180/weatherstation/updateweatherstation.php?".$_SERVER['QUERY_STRING']);
+$xml = file_get_contents("http://34.232.250.77/weatherstation/updateweatherstation.php?".$_SERVER['QUERY_STRING']);
 
 
 // POST TO WOW MET OFFICE
