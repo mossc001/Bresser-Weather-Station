@@ -193,7 +193,7 @@ $mqtt->publish($mqttRoot .'winddirection', $_GET["winddir"], 0);
 $mqtt->disconnect();
 
 // POST TO WU
-$xml = file_get_contents("http://34.232.250.77/weatherstation/updateweatherstation.php?".$_SERVER['QUERY_STRING']);
+$xml = file_get_contents("http://pws-ingest-use1-01.sun.weather.com/weatherstation/updateweatherstation.php?".$_SERVER['QUERY_STRING']);
 
 
 // POST TO WOW MET OFFICE
@@ -210,71 +210,51 @@ Your weather station should now push data to your XAMPP Web Server and also repu
 NOTE: You need to create a service for autorunning XAMPP on startup; https://www.computernetworkingnotes.com/linux-tutorials/auto-start-xampp-at-startup-in-ubuntu-linux.html
 
 
-
 In Home Assistant, add these sensors to your config.yaml:
 
-  - platform: mqtt
-    name: "PWS Barometer"
-    state_topic: "pws/sensors/baromin"
-    unit_of_measurement: 'HPa'
-    icon: mdi:gauge
-
-  - platform: mqtt
-    name: "PWS Outside Temperature"
-    state_topic: "pws/sensors/temp"
-    unit_of_measurement: '°C'
-    icon: mdi:thermometer-lines
-
-  - platform: mqtt
-    name: "PWS Dew Point"
-    state_topic: "pws/sensors/dewpt"
-    unit_of_measurement: '°C'
-    icon: mdi:thermometer-lines
-
-  - platform: mqtt
-    name: "PWS Outside Humidity"
-    state_topic: "pws/sensors/humidity"
-    unit_of_measurement: '%'
-    icon: mdi:water-percent
-
-  - platform: mqtt
-    name: "PWS Wind speed"
-    state_topic: "pws/sensors/windspeedkph"
-    unit_of_measurement: 'KMh'
-    icon: mdi:weather-windy
-
-  - platform: mqtt
-    name: "PWS Wind Gust speed"
-    state_topic: "pws/sensors/windgustkph"
-    unit_of_measurement: 'KMh'
-    icon: mdi:weather-windy
-
-  - platform: mqtt
-    name: "PWS Wind direction"
-    state_topic: "pws/sensors/winddir"
-    unit_of_measurement: ''
-    icon: mdi:compass
-
-  - platform: mqtt
-    name: "PWS Rain"
-    state_topic: "pws/sensors/rainmm"
-    unit_of_measurement: 'mm'
-    icon: mdi:ruler
-
-  - platform: mqtt
-    name: "PWS Daily Rain"
-    state_topic: "pws/sensors/dailyrainmm"
-    unit_of_measurement: 'mm'
-    icon: mdi:ruler
-
-  - platform: mqtt
-    name: "PWS Indoor Temperature"
-    state_topic: "pws/sensors/indoortemp"
-    unit_of_measurement: '°C'
-    icon: mdi:thermometer-lines
-
-  - platform: mqtt
-    name: "PWS Indoor Humidity"
-    state_topic: "pws/sensors/indoorhumidity"
-    unit_of_measurement: '%'
-    icon: mdi:water-percent
+mqtt:
+  sensor:
+    - name: "PWS Barometer"
+      state_topic: "pws/sensors/baromin"
+      unit_of_measurement: 'HPa'
+      icon: mdi:gauge
+    - name: "PWS Outside Temperature"
+      state_topic: "pws/sensors/temp"
+      unit_of_measurement: '°C'
+      icon: mdi:thermometer-lines
+    - name: "PWS Dew Point"
+      state_topic: "pws/sensors/dewpt"
+      unit_of_measurement: '°C'
+      icon: mdi:thermometer-lines
+    - name: "PWS Outside Humidity"
+      state_topic: "pws/sensors/humidity"
+      unit_of_measurement: '%'
+      icon: mdi:water-percent
+    - name: "PWS Wind speed"
+      state_topic: "pws/sensors/windspeedkph"
+      unit_of_measurement: 'KMh'
+      icon: mdi:weather-windy
+    - name: "PWS Wind Gust speed"
+      state_topic: "pws/sensors/windgustkph"
+      unit_of_measurement: 'KMh'
+      icon: mdi:weather-windy
+    - name: "PWS Wind direction"
+      state_topic: "pws/sensors/winddirection"
+      unit_of_measurement: '°'
+      icon: mdi:compass
+    - name: "PWS Rain"
+      state_topic: "pws/sensors/rainmm"
+      unit_of_measurement: 'mm'
+      icon: mdi:ruler
+    - name: "PWS Daily Rain"
+      state_topic: "pws/sensors/dailyrainmm"
+      unit_of_measurement: 'mm'
+      icon: mdi:ruler
+    - name: "PWS Indoor Temperature"
+      state_topic: "pws/sensors/indoortemp"
+      unit_of_measurement: '°C'
+      icon: mdi:thermometer-lines
+    - name: "PWS Indoor Humidity"
+      state_topic: "pws/sensors/indoorhumidity"
+      unit_of_measurement: '%'
+      icon: mdi:water-percent
