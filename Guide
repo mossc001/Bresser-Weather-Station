@@ -182,13 +182,17 @@ $mqtt->publish($mqttRoot .'dewpt', toC($_GET["dewptf"]), 0);
 $mqtt->publish($mqttRoot .'humidity', $_GET["humidity"], 0);
 $mqtt->publish($mqttRoot .'windspeedkph', toKM($_GET["windspeedmph"]), 0);
 $mqtt->publish($mqttRoot .'windgustkph', toKM($_GET["windgustmph"]), 0);
+
+// Use this WindDir if you want wind direction as per a compass
 // $mqtt->publish($mqttRoot .'winddir',wind_cardinal( $_GET["winddir"]), 0);
+
+// Use this WindDir if you want wind direction in degrees
+$mqtt->publish($mqttRoot .'winddirection', $_GET["winddir"], 0);
+
 $mqtt->publish($mqttRoot .'rainmm', toMM($_GET["rainin"]), 0);
 $mqtt->publish($mqttRoot .'dailyrainmm', toMM($_GET["dailyrainin"]), 0);
 $mqtt->publish($mqttRoot .'indoortemp', toC($_GET["indoortempf"]), 0);
 $mqtt->publish($mqttRoot .'indoorhumidity', $_GET["indoorhumidity"], 0);
-
-$mqtt->publish($mqttRoot .'winddirection', $_GET["winddir"], 0);
 
 $mqtt->disconnect();
 
