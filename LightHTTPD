@@ -1,0 +1,13 @@
+sudo apt-get update && sudo apt-get upgrade -y
+
+apt-get install lighttpd
+
+systemctl start lighttpd
+systemctl enable lighttpd
+
+systemctl status lighttpd
+
+
+sudo apt install php php-cgi php-cli php-fpm php-curl php-gd php-mysql php-mbstring zip unzip
+
+php --version
