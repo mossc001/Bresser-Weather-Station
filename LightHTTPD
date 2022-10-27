@@ -12,6 +12,22 @@ sudo apt install php php-cgi php-cli php-fpm php-curl php-gd php-mysql php-mbstr
 
 php --version
 
+
+https://www.linuxshelltips.com/install-lighttpd-in-ubuntu/
+
+$ sudo nano /etc/php/8.1/fpm/pool.d/www.conf
+Comment out the initial listen = /run/php/php8.1-fpm.sock value and set it to listen = 127.0.0.1:9000 as shown.
+
+$ sudo nano /etc/lighttpd/conf-available/15-fastcgi-php.conf
+"bin-path" to "host" => "127.0.0.1"
+"socket" to "port" = > "9000"
+
+$ sudo lighty-enable-mod fastcgi
+$ sudo lighty-enable-mod fastcgi-php
+
+$ sudo systemctl restart lighttpd php8.1-fpm
+
+
 $ sudo apt curl
 $ cd ~
 $ curl -sS https://getcomposer.org/installer -o composer-setup.php
