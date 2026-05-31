@@ -188,7 +188,7 @@ $mqtt->publish($mqttRoot .'indoorhumidity', $_GET["indoorhumidity"], 0);
 $mqtt->disconnect();
 
 // POST TO WU
-$xml = file_get_contents("http://pws-ingest-use1-01.sun.weather.com/weatherstation/updateweatherstation.php?".$_SERVER['QUERY_STRING']);
+$xml = file_get_contents("http://k8s-pwsngingestalb-c5d43a0a2d-829479978.us-east-1.elb.amazonaws.com/weatherstation/updateweatherstation.php?".$_SERVER['QUERY_STRING']);
 
 
 // POST TO WOW MET OFFICE
